@@ -37,8 +37,9 @@ set(PCFILEZ "${CMAKE_CURRENT_BINARY_DIR}/Clipper2Z.pc")
 # 2d version of Clipper2
 add_library(Clipper2 ${CLIPPER2_INC} ${CLIPPER2_SRC})
 
-target_include_directories(Clipper2
-  PUBLIC Clipper2Lib/include
+target_include_directories(Clipper2 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Clipper2Lib/include>
+    $<INSTALL_INTERFACE:include/clipper2>
 )
 
 # Clipper2 but with USINGZ defined
@@ -46,8 +47,9 @@ add_library(Clipper2Z ${CLIPPER2_INC} ${CLIPPER2_SRC})
 
 target_compile_definitions(Clipper2Z PUBLIC USINGZ)
 
-target_include_directories(Clipper2Z
-  PUBLIC Clipper2Lib/include
+target_include_directories(Clipper2Z PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Clipper2Lib/include>
+    $<INSTALL_INTERFACE:include/clipper2>
 )
 
 if (WIN32)
@@ -162,10 +164,10 @@ endif()
     Tests/TestTrimCollinear.cpp
   )
   add_executable(ClipperTests ${ClipperTests_SRC})
-  target_link_libraries(ClipperTests gtest gtest_main Clipper2 Clipper2utils)
+  target_link_libraries(ClipperTests GTest::gtest GTest::gtest_main Clipper2 Clipper2utils)
 
   add_executable(ClipperTestsZ ${ClipperTests_SRC})
-  target_link_libraries(ClipperTestsZ gtest gtest_main Clipper2Z Clipper2Zutils)
+  target_link_libraries(ClipperTestsZ GTest::gtest GTest::gtest_main Clipper2Z Clipper2Zutils)
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(ClipperTests PRIVATE -Wno-unused-variable -Wno-unused-function)
@@ -198,6 +200,17 @@ set(PCFILE_LIB_SUFFIX "Z")
 CONFIGURE_FILE(Clipper2.pc.cmakein "${PCFILEZ}" @ONLY)
 
 install(TARGETS Clipper2 Clipper2Z
+        EXPORT Clipper2Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/clipper2
 )
-install(FILES ${PCFILE} ${PCFILEZ} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+# Set installation path for CMake files.
+set(CLIPPER2_CMAKE_DESTINATION share/Clipper2)
+
+
+install(EXPORT Clipper2Targets
+        FILE Clipper2-config.cmake
+        NAMESPACE Clipper2::
+        DESTINATION ${CLIPPER2_CMAKE_DESTINATION}
+)
+
