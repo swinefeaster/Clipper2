@@ -402,9 +402,10 @@ void ClipperOffset::DoGroupOffset(Group& group, double delta)
 
 	bool is_closed_path = IsClosedPath(group.end_type_);
 	Paths64::const_iterator path_iter;
+	Path64 & path = working_path_;
 	for(path_iter = group.paths_in_.cbegin(); path_iter != group.paths_in_.cend(); ++path_iter)
 	{
-		Path64 path = StripDuplicates(*path_iter, is_closed_path);
+		StripDuplicates(*path_iter, is_closed_path, path);
 		Path64::size_type cnt = path.size();
 		if (cnt == 0) continue;
 

@@ -62,6 +62,7 @@ private:
 	Paths64 solution;
 	std::vector<Group> groups_;
 	JoinType join_type_ = JoinType::Square;
+	Path64 working_path_; // Kept around to avoid reallocating heap memory.
 
 	double miter_limit_ = 0.0;
 	double arc_tolerance_ = 0.0;
