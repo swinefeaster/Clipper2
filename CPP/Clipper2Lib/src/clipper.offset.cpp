@@ -23,16 +23,16 @@ const double floating_point_tolerance = 1e-12;
 Paths64::size_type GetLowestPolygonIdx(const Paths64& paths)
 {
 	Paths64::size_type result = 0;
-	Point64 lp = Point64(static_cast<int64_t>(0), 
+	Point64 lp = Point64(static_cast<int64_t>(0),
 		std::numeric_limits<int64_t>::min());
 
 	for (Paths64::size_type i = 0 ; i < paths.size(); ++i)
 		for (const Point64& p : paths[i])
-		{ 
+		{
 			if (p.y < lp.y || (p.y == lp.y && p.x >= lp.x)) continue;
 			result = i;
 			lp = p;
-		}	
+		}
 	return result;
 }
 
@@ -53,7 +53,7 @@ inline bool AlmostZero(double value, double epsilon = 0.001)
 	return std::fabs(value) < epsilon;
 }
 
-inline double Hypot(double x, double y) 
+inline double Hypot(double x, double y)
 {
 	//see https://stackoverflow.com/a/32436148/359538
 	return std::sqrt(x * x + y * y);
@@ -61,7 +61,7 @@ inline double Hypot(double x, double y)
 
 inline PointD NormalizeVector(const PointD& vec)
 {
-	
+
 	double h = Hypot(vec.x, vec.y);
 	if (AlmostZero(h)) return PointD(0,0);
 	double inverseHypot = 1 / h;
@@ -104,6 +104,18 @@ void ClipperOffset::AddPaths(const Paths64 &paths, JoinType jt_, EndType et_)
 	if (paths.size() == 0) return;
 	groups_.push_back(Group(paths, jt_, et_));
 }
+
+
+void ClipperOffset::SetPaths(const Paths64 & paths, JoinType jt_, EndType et_)
+{
+	groups_.resize(paths.size());
+
+	for (size_t index = 0; index < paths.size(); ++index)
+    {
+        groups_[index].Init(paths, jt_, et_);
+    }
+}
+
 
 void ClipperOffset::AddPath(const Clipper2Lib::PathD& path, JoinType jt_, EndType et_)
 {
@@ -171,7 +183,7 @@ PointD IntersectPoint(const PointD& pt1a, const PointD& pt1b,
 void ClipperOffset::DoSquare(Group& group, const Path64& path, size_t j, size_t k)
 {
 	PointD vec;
-	if (j == k) 
+	if (j == k)
 		vec = PointD(norms[0].y, -norms[0].x);
 	else
 		vec = GetAvgUnitVector(
@@ -219,7 +231,7 @@ void ClipperOffset::DoRound(Group& group, const Path64& path, size_t j, size_t k
 	int steps = static_cast<int>(std::ceil(steps_per_rad_ * std::abs(angle)));
 	double step_sin = std::sin(angle / steps);
 	double step_cos = std::cos(angle / steps);
-	
+
 	PointD pt2 = PointD(norms[k].x * group_delta_, norms[k].y * group_delta_);
 	if (j == k) pt2.Negate();
 
@@ -266,7 +278,7 @@ void ClipperOffset::OffsetPoint(Group& group, Path64& path, size_t j, size_t& k)
 			group.path_.push_back(p2);
 		}
 	}
-	else // it's convex 
+	else // it's convex
 	{
 		if (join_type_ == JoinType::Round)
 			DoRound(group, path, j, k, std::atan2(sin_a, cos_a));
@@ -279,9 +291,9 @@ void ClipperOffset::OffsetPoint(Group& group, Path64& path, size_t j, size_t& k)
 		// don't bother squaring angles that deviate < ~20 degrees because
 		// squaring will be indistinguishable from mitering and just be a lot slower
 		else if (cos_a > 0.9)
-			DoMiter(group, path, j, k, cos_a);			
+			DoMiter(group, path, j, k, cos_a);
 		else
-			DoSquare(group, path, j, k);			
+			DoSquare(group, path, j, k);
 	}
 	k = j;
 }
@@ -329,7 +341,7 @@ void ClipperOffset::OffsetOpenPath(Group& group, Path64& path, EndType end_type)
 	for (Path64::size_type i = 1, k = 0; i < highI; ++i)
 		OffsetPoint(group, path, i, k);
 
-	// reverse normals 
+	// reverse normals
 	for (size_t i = highI; i > 0; --i)
 		norms[i] = PointD(-norms[i - 1].x, -norms[i - 1].y);
 	norms[0] = norms[highI];
@@ -368,10 +380,10 @@ void ClipperOffset::DoGroupOffset(Group& group, double delta)
 		Paths64::size_type lowestIdx = GetLowestPolygonIdx(group.paths_in_);
     // nb: don't use the default orientation here ...
 		double area = Area(group.paths_in_[lowestIdx]);
-		if (area == 0) return;	
+		if (area == 0) return;
 		group.is_reversed_ = (area < 0);
 		if (group.is_reversed_) delta = -delta;
-	} 
+	}
 	else
 		group.is_reversed_ = false;
 
@@ -454,12 +466,12 @@ Paths64 ClipperOffset::Execute(double delta)
 		return solution;
 	}
 
-	temp_lim_ = (miter_limit_ <= 1) ? 
-		2.0 : 
+	temp_lim_ = (miter_limit_ <= 1) ?
+		2.0 :
 		2.0 / (miter_limit_ * miter_limit_);
 
 	std::vector<Group>::iterator groups_iter;
-	for (groups_iter = groups_.begin(); 
+	for (groups_iter = groups_.begin();
 		groups_iter != groups_.end(); ++groups_iter)
 	{
 		DoGroupOffset(*groups_iter, delta);

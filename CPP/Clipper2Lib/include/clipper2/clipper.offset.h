@@ -34,8 +34,24 @@ private:
 		bool is_reversed_ = false;
 		JoinType join_type_;
 		EndType end_type_;
+		Group() = default;
 		Group(const Paths64& paths, JoinType join_type, EndType end_type) :
 			paths_in_(paths), join_type_(join_type), end_type_(end_type) {}
+
+		void Init(const Paths64 & paths, JoinType join_type, EndType end_type)
+		{
+			paths_out_.resize(0);
+			path_.resize(0);
+			is_reversed_ = false;
+			join_type_ = join_type;
+			end_type_ = end_type;
+
+			paths_in_.resize(paths.size());
+			for (size_t index = 0; index < paths.size(); ++index)
+			{
+				paths_in_[index] = paths[index];
+			}
+		}
 	};
 
 	double group_delta_ = 0.0;
@@ -46,7 +62,7 @@ private:
 	Paths64 solution;
 	std::vector<Group> groups_;
 	JoinType join_type_ = JoinType::Square;
-	
+
 	double miter_limit_ = 0.0;
 	double arc_tolerance_ = 0.0;
 	bool merge_groups_ = true;
@@ -65,7 +81,7 @@ private:
 public:
 	ClipperOffset(double miter_limit = 2.0,
 		double arc_tolerance = 0.0,
-		bool preserve_collinear = false, 
+		bool preserve_collinear = false,
 		bool reverse_solution = false) :
 		miter_limit_(miter_limit), arc_tolerance_(arc_tolerance),
 		preserve_collinear_(preserve_collinear),
@@ -75,10 +91,11 @@ public:
 
 	void AddPath(const Path64& path, JoinType jt_, EndType et_);
 	void AddPaths(const Paths64& paths, JoinType jt_, EndType et_);
+    void SetPaths(const Paths64 & paths, JoinType jt_, EndType et_);
 	void AddPath(const PathD &p, JoinType jt_, EndType et_);
 	void AddPaths(const PathsD &p, JoinType jt_, EndType et_);
 	void Clear() { groups_.clear(); norms.clear(); };
-	
+
 	Paths64 Execute(double delta);
 
 	double MiterLimit() const { return miter_limit_; }
@@ -98,7 +115,7 @@ public:
 
 	bool PreserveCollinear() const { return preserve_collinear_; }
 	void PreserveCollinear(bool preserve_collinear){preserve_collinear_ = preserve_collinear;}
-	
+
 	bool ReverseSolution() const { return reverse_solution_; }
 	void ReverseSolution(bool reverse_solution) {reverse_solution_ = reverse_solution;}
 };
