@@ -15,7 +15,7 @@
 #include "clipper.h"
 #include "clipper.core.h"
 
-namespace Clipper2Lib 
+namespace Clipper2Lib
 {
 
   enum class Location { Left, Top, Right, Bottom, Inside };
@@ -37,7 +37,7 @@ namespace Clipper2Lib
       rect_(rect),
       mp_(rect.MidPoint()),
       rectPath_(rect.AsPath()) {}
-    Path64 Execute(const Path64& path);
+    std::shared_ptr<Path64> Execute(const Path64& path);
   };
 
   class RectClipLines : public RectClip {

@@ -63,7 +63,7 @@ namespace Clipper2Lib {
     const Point64& ln2a, const Point64& ln2b)
   {
     // see http://astronomy.swin.edu.au/~pbourke/geometry/lineline2d/
-    if (ln1b.x == ln1a.x) 
+    if (ln1b.x == ln1a.x)
     {
       if (ln2b.x == ln2a.x) return Point64(); // parallel lines
       double m2 = static_cast<double>(ln2b.y - ln2a.y) / (ln2b.x - ln2a.x);
@@ -300,7 +300,7 @@ namespace Clipper2Lib {
         break; //inner loop
       }
       break;
-    } //switch          
+    } //switch
   }
 
   Path64 RectClip::Execute(const Path64& path)
@@ -347,7 +347,7 @@ namespace Clipper2Lib {
             start_locs_.push_back(prev);
             prev = GetAdjacentLocation(prev, isClockw);
           } while (prev != loc);
-          crossing_loc = crossing_prev; // still not crossed 
+          crossing_loc = crossing_prev; // still not crossed
         }
         else if (prev != Location::Inside && prev != loc)
         {
@@ -381,7 +381,7 @@ namespace Clipper2Lib {
       }
       else if (prev != Location::Inside)
       {
-        // passing right through rect. 'ip' here will be the second 
+        // passing right through rect. 'ip' here will be the second
         // intersect pt but we'll also need the first intersect pt (ip2)
         loc = prev;
         GetIntersection(rectPath_, prev_pt, path[i], loc, ip2);
@@ -521,7 +521,7 @@ namespace Clipper2Lib {
       }
       else if (prev != Location::Inside)
       {
-        // passing right through rect. 'ip' here will be the second 
+        // passing right through rect. 'ip' here will be the second
         // intersect pt but we'll also need the first intersect pt (ip2)
         crossing_loc = prev;
         GetIntersection(rectPath_, prev_pt, path[i], crossing_loc, ip2);

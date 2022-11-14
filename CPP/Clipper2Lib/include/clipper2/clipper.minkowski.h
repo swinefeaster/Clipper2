@@ -15,7 +15,7 @@
 #include <string>
 #include "clipper.core.h"
 
-namespace Clipper2Lib 
+namespace Clipper2Lib
 {
 
   namespace detail
@@ -28,25 +28,22 @@ namespace Clipper2Lib
       Paths64 tmp;
       tmp.reserve(pathLen);
 
-      if (isSum)
+      for (const Point64& p : path)
       {
-        for (const Point64& p : path)
-        {
-          Path64 path2(pattern.size());
-          std::transform(pattern.cbegin(), pattern.cend(),
-            path2.begin(), [p](const Point64& pt2) {return p + pt2; });
-          tmp.push_back(path2);
-        }
-      }
-      else
-      {
-        for (const Point64& p : path)
-        {
-          Path64 path2(pattern.size());
-          std::transform(pattern.cbegin(), pattern.cend(),
-            path2.begin(), [p](const Point64& pt2) {return p - pt2; });
-          tmp.push_back(path2);
-        }
+        auto path2 = std::make_shared<Path64>(pattern.size());
+        std::transform(pattern.cbegin(), pattern.cend(),
+        path2->begin(), [p, isSum](const Point64& pt2)
+          {
+              if (isSum)
+              {
+                  return p + pt2;
+              }
+              else
+              {
+                  return p - pt2;
+              }
+          });
+        tmp.push_back(move(path2));
       }
 
       Paths64 result;
@@ -56,16 +53,16 @@ namespace Clipper2Lib
       {
         for (size_t j = 0; j < patLen; j++)
         {
-          Path64 quad;
-          quad.reserve(4);
+          auto quad = std::make_shared<Path64>();
+          quad->reserve(4);
           {
-            quad.push_back(tmp[g][h]);
-            quad.push_back(tmp[i][h]);
-            quad.push_back(tmp[i][j]);
-            quad.push_back(tmp[g][j]);
+            quad->push_back((*(tmp[g]))[h]);
+            quad->push_back((*(tmp[i]))[h]);
+            quad->push_back((*(tmp[i]))[j]);
+            quad->push_back((*(tmp[g]))[j]);
           };
-          if (!IsPositive(quad))
-            std::reverse(quad.begin(), quad.end());
+          if (!IsPositive(*quad))
+            std::reverse(quad->begin(), quad->end());
           result.push_back(quad);
           h = j;
         }
@@ -107,7 +104,7 @@ namespace Clipper2Lib
   inline PathsD MinkowskiDiff(const PathD& pattern, const PathD& path, bool isClosed, int decimalPlaces = 2)
   {
     double scale = pow(10, decimalPlaces);
-    Path64 pat64 = ScalePath<int64_t, double>(pattern, scale); 
+    Path64 pat64 = ScalePath<int64_t, double>(pattern, scale);
     Path64 path64 = ScalePath<int64_t, double>(path, scale);
     Paths64 tmp = detail::Union(detail::Minkowski(pat64, path64, false, isClosed), FillRule::NonZero);
     return ScalePaths<double, int64_t>(tmp, 1 / scale);

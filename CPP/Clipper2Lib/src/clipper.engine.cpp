@@ -94,7 +94,7 @@ namespace Clipper2Lib {
 
 	inline bool IsOpenEnd(const Vertex& v)
 	{
-		return (v.flags & (VertexFlags::OpenStart | VertexFlags::OpenEnd)) != 
+		return (v.flags & (VertexFlags::OpenStart | VertexFlags::OpenEnd)) !=
 			VertexFlags::None;
 	}
 
@@ -203,7 +203,7 @@ namespace Clipper2Lib {
 		else if (val1 < LLONG_MIN - val2) throw overflow_error;
 	}
 
-	inline void CheckAdd(int64_t val1, double val2) 
+	inline void CheckAdd(int64_t val1, double val2)
 	{
 		CheckAdd(static_cast<double>(val1), val2);
 	}
@@ -275,7 +275,7 @@ namespace Clipper2Lib {
 		else
 		{
 			b1 = e1.bot.x - e1.bot.y * e1.dx;
-			b2 = e2.bot.x - e2.bot.y * e2.dx;			
+			b2 = e2.bot.x - e2.bot.y * e2.dx;
 #ifdef CHECK_OVERFLOW
 			CheckMul(b2 - b1, 1/q);
 #endif
@@ -363,7 +363,7 @@ namespace Clipper2Lib {
 
 
 	//PrevPrevVertex: useful to get the (inverted Y-axis) top of the
-	//alternate edge (ie left or right bound) during edge insertion.	
+	//alternate edge (ie left or right bound) during edge insertion.
 	inline Vertex* PrevPrevVertex(const Active& ae)
 	{
 		if (ae.wind_dx > 0)
@@ -410,7 +410,7 @@ namespace Clipper2Lib {
 			while (result->next->pt.y == result->pt.y) result = result->next;
 		else
 			while (result->prev->pt.y == result->pt.y) result = result->prev;
-		if (!IsMaxima(*result)) result = nullptr; // not a maxima   
+		if (!IsMaxima(*result)) result = nullptr; // not a maxima
 		return result;
 	}
 
@@ -551,7 +551,7 @@ namespace Clipper2Lib {
 		return result * 0.5;
 	}
 
-	inline double AreaTriangle(const Point64& pt1, 
+	inline double AreaTriangle(const Point64& pt1,
 		const Point64& pt2, const Point64& pt3)
 	{
 		return (static_cast<double>(pt3.y + pt1.y) * static_cast<double>(pt3.x - pt1.x) +
@@ -687,7 +687,7 @@ namespace Clipper2Lib {
 		Clear();
 	}
 
-	void ClipperBase::DeleteEdges(Active*& e) 
+	void ClipperBase::DeleteEdges(Active*& e)
 	{
 		while (e)
 		{
@@ -738,7 +738,7 @@ namespace Clipper2Lib {
 	void ClipperBase::SetZ(const Active& e1, const Active& e2, Point64& ip)
 	{
 		if (!zCallback_) return;
-		// prioritize subject over clip vertices by passing 
+		// prioritize subject over clip vertices by passing
 		// subject vertices before clip vertices in the callback
 		if (GetPolyType(e1) == PathType::Subject)
 		{
@@ -762,7 +762,7 @@ namespace Clipper2Lib {
 	void ClipperBase::AddPath(const Path64& path, PathType polytype, bool is_open)
 	{
 		Paths64 tmp;
-		tmp.push_back(path);
+		tmp.push_back(std::make_shared<Path64>(path));
 		AddPaths(tmp, polytype, is_open);
 	}
 
@@ -773,17 +773,17 @@ namespace Clipper2Lib {
 		minima_list_sorted_ = false;
 
 		Path64::size_type total_vertex_count = 0;
-		for (const Path64& path : paths) total_vertex_count += path.size();
+		for (const auto & path : paths) total_vertex_count += path->size();
 		if (total_vertex_count == 0) return;
 		Vertex* vertices = new Vertex[total_vertex_count], *v = vertices;
-		for (const Path64& path : paths)
+		for (const auto & path : paths)
 		{
 			//for each path create a circular double linked list of vertices
 			Vertex *v0 = v, *curr_v = v, *prev_v = nullptr;
 
 			v->prev = nullptr;
 			int cnt = 0;
-			for (const Point64& pt : path)
+			for (const Point64& pt : *path)
 			{
 				if (prev_v)
 				{
@@ -929,19 +929,19 @@ namespace Clipper2Lib {
 		case FillRule::EvenOdd:
 			break;
 		case FillRule::NonZero:
-			if (abs(e.wind_cnt) != 1) return false; 
+			if (abs(e.wind_cnt) != 1) return false;
 			break;
 		case FillRule::Positive:
-			if (e.wind_cnt != 1) return false; 
+			if (e.wind_cnt != 1) return false;
 			break;
 		case FillRule::Negative:
-			if (e.wind_cnt != -1) return false; 
+			if (e.wind_cnt != -1) return false;
 			break;
 		}
 
 		switch (cliptype_)
 		{
-		case ClipType::None: 
+		case ClipType::None:
 			return false;
 		case ClipType::Intersection:
 			switch (fillrule_)
@@ -971,17 +971,17 @@ namespace Clipper2Lib {
 			bool result;
 			switch (fillrule_)
 			{
-			case FillRule::Positive: 
-				result = (e.wind_cnt2 <= 0); 
+			case FillRule::Positive:
+				result = (e.wind_cnt2 <= 0);
 				break;
 			case FillRule::Negative:
-				result = (e.wind_cnt2 >= 0); 
+				result = (e.wind_cnt2 >= 0);
 				break;
-			default: 
+			default:
 				result = (e.wind_cnt2 == 0);
 			}
 			if (GetPolyType(e) == PathType::Subject)
-				return result; 
+				return result;
 			else
 				return !result;
 			break;
@@ -997,15 +997,15 @@ namespace Clipper2Lib {
 		bool is_in_clip, is_in_subj;
 		switch (fillrule_)
 		{
-		case FillRule::Positive: 
-			is_in_clip = e.wind_cnt2 > 0; 
+		case FillRule::Positive:
+			is_in_clip = e.wind_cnt2 > 0;
 			is_in_subj = e.wind_cnt > 0;
 			break;
-		case FillRule::Negative: 
-			is_in_clip = e.wind_cnt2 < 0; 
+		case FillRule::Negative:
+			is_in_clip = e.wind_cnt2 < 0;
 			is_in_subj = e.wind_cnt < 0;
 			break;
-		default: 
+		default:
 			is_in_clip = e.wind_cnt2 != 0;
 			is_in_subj = e.wind_cnt != 0;
 		}
@@ -1142,15 +1142,15 @@ namespace Clipper2Lib {
 		//the direction they're about to turn
 		if (!IsMaxima(resident) && (resident.top.y > newcomer.top.y))
 		{
-			return CrossProduct(newcomer.bot, 
+			return CrossProduct(newcomer.bot,
 				resident.top, NextVertex(resident)->pt) <= 0;
 		}
-		else if (!IsMaxima(newcomer) && (newcomer.top.y > resident.top.y))		
+		else if (!IsMaxima(newcomer) && (newcomer.top.y > resident.top.y))
 		{
 			return CrossProduct(newcomer.bot,
 				newcomer.top, NextVertex(newcomer)->pt) >= 0;
 		}
-			
+
 		int64_t y = newcomer.bot.y;
 		bool newcomerIsLeft = newcomer.is_left_bound;
 
@@ -1160,7 +1160,7 @@ namespace Clipper2Lib {
 		else if (resident.is_left_bound != newcomerIsLeft)
 			return newcomerIsLeft;
 		else if (CrossProduct(PrevPrevVertex(resident)->pt,
-			resident.bot, resident.top) == 0) return true;				
+			resident.bot, resident.top) == 0) return true;
 		else
 			//compare turning direction of the alternate bound
 			return (CrossProduct(PrevPrevVertex(resident)->pt,
@@ -1376,7 +1376,7 @@ namespace Clipper2Lib {
 				SetSides(*outrec, e1, e2);
 			else
 				SetSides(*outrec, e2, e1);
-		}	 
+		}
 		else
 		{
 			Active* prevHotEdge = GetPrevHotEdge(e1);
@@ -1392,7 +1392,7 @@ namespace Clipper2Lib {
 				else
 					SetSides(*outrec, e1, e2);
 			}
-			else 
+			else
 			{
 				outrec->owner = nullptr;
 				if (is_new)
@@ -1401,7 +1401,7 @@ namespace Clipper2Lib {
 					SetSides(*outrec, e2, e1);
 			}
 		}
-			
+
 		OutPt* op = new OutPt(pt, outrec);
 		outrec->pts = op;
 		return op;
@@ -1416,7 +1416,7 @@ namespace Clipper2Lib {
 				SwapFrontBackSides(*e1.outrec);
 			else if (IsOpenEnd(e2))
 				SwapFrontBackSides(*e2.outrec);
-			else 
+			else
 			{
 				succeeded_ = false;
 				return nullptr;
@@ -1426,7 +1426,7 @@ namespace Clipper2Lib {
 		OutPt* result = AddOutPt(e1, pt);
 		if (e1.outrec == e2.outrec)
 		{
-			OutRec& outrec = *e1.outrec;		
+			OutRec& outrec = *e1.outrec;
 			outrec.pts = result;
 
 			UncoupleOutRec(e1);
@@ -1580,7 +1580,7 @@ namespace Clipper2Lib {
 
 	void ClipperBase::DoSplitOp(OutRec* outrec, OutPt* splitOp)
 	{
-		// splitOp.prev -> splitOp && 
+		// splitOp.prev -> splitOp &&
 		// splitOp.next -> splitOp.next.next are intersecting
 		OutPt* prevOp = splitOp->prev;
 		OutPt* nextNextOp = splitOp->next->next;
@@ -1629,7 +1629,7 @@ namespace Clipper2Lib {
 		SafeDeleteOutPtJoiners(splitOp->next);
 		SafeDeleteOutPtJoiners(splitOp);
 
-		if (absArea2 >= 1 && 
+		if (absArea2 >= 1 &&
 			(absArea2 > absArea1 || (area2 > 0) == (area1 > 0)))
 		{
 			OutRec* newOutRec = new OutRec();
@@ -1819,7 +1819,7 @@ namespace Clipper2Lib {
 			else result = result->next_in_ael;
 		}
 		result = e->prev_in_ael;
-		while (result) 
+		while (result)
 		{
 			if (result->local_min == e->local_min) return result;
 			else if (!IsHorizontal(*result) && e->bot != result->bot) return nullptr;
@@ -1848,14 +1848,14 @@ namespace Clipper2Lib {
 				edge_c = &e1;
 			}
 
-			if (abs(edge_c->wind_cnt) != 1) return nullptr;			
+			if (abs(edge_c->wind_cnt) != 1) return nullptr;
 			switch (cliptype_)
 			{
-			case ClipType::Union: 
-				if (!IsHotEdge(*edge_c)) return nullptr; 
+			case ClipType::Union:
+				if (!IsHotEdge(*edge_c)) return nullptr;
 				break;
-			default: 
-				if (edge_c->local_min->polytype == PathType::Subject) 
+			default:
+				if (edge_c->local_min->polytype == PathType::Subject)
 					return nullptr;
 			}
 
@@ -1878,11 +1878,11 @@ namespace Clipper2Lib {
 				edge_o->outrec = nullptr;
 				return resultOp;
 			}
-		
+
 			//horizontal edges can pass under open paths at a LocMins
 			else if (pt == edge_o->local_min->vertex->pt &&
 				!IsOpenEnd(*edge_o->local_min->vertex))
-			{ 
+			{
 				//find the other side of the LocMin and
 				//if it's 'hot' join up with it ...
 				Active* e3 = FindEdgeWithMatchingLocMin(edge_o);
@@ -1890,7 +1890,7 @@ namespace Clipper2Lib {
 				{
 					edge_o->outrec = e3->outrec;
 					if (edge_o->wind_dx > 0)
-						SetSides(*e3->outrec, *edge_o, *e3); 
+						SetSides(*e3->outrec, *edge_o, *e3);
 					else
 						SetSides(*e3->outrec, *e3, *edge_o);
 					return e3->outrec->pts;
@@ -1904,7 +1904,7 @@ namespace Clipper2Lib {
 
 
 		//MANAGING CLOSED PATHS FROM HERE ON
-		
+
 		//UPDATE WINDING COUNTS...
 
 		int old_e1_windcnt, old_e2_windcnt;
@@ -1970,7 +1970,7 @@ namespace Clipper2Lib {
 		{
 			return nullptr;
 		}
-		
+
 		//NOW PROCESS THE INTERSECTION ...
 		OutPt* resultOp = nullptr;
 		//if both edges are 'hot' ...
@@ -2162,7 +2162,7 @@ namespace Clipper2Lib {
 
 	void ClipperBase::AddNewIntersectNode(Active& e1, Active& e2, int64_t top_y)
 	{
-		Point64 pt; 
+		Point64 pt;
 		if (!GetIntersectPoint(e1, e2, pt))
 			pt = Point64(e1.curr_x, top_y); //parallel edges
 
@@ -2341,7 +2341,7 @@ namespace Clipper2Lib {
 	inline bool HorzIsSpike(const Active& horzEdge)
 	{
 		Point64 nextPt = NextVertex(horzEdge)->pt;
-		return (nextPt.y == horzEdge.bot.y) && 
+		return (nextPt.y == horzEdge.bot.y) &&
 			(horzEdge.bot.x < horzEdge.top.x) != (horzEdge.top.x < nextPt.x);
 	}
 
@@ -2354,7 +2354,7 @@ namespace Clipper2Lib {
 			//always trim 180 deg. spikes (in closed paths)
 			//but otherwise break if preserveCollinear = true
 			if (preserveCollinear &&
-				((pt.x < horzEdge.top.x) != (horzEdge.bot.x < horzEdge.top.x))) 
+				((pt.x < horzEdge.top.x) != (horzEdge.bot.x < horzEdge.top.x)))
 					break;
 
 			horzEdge.vertex_top = NextVertex(horzEdge);
@@ -2412,11 +2412,11 @@ namespace Clipper2Lib {
 
 		OutPt* op;
 		while (true) // loop through consec. horizontal edges
-		{  
+		{
 			if (horzIsOpen && IsMaxima(horz) && !IsOpenEnd(horz))
 			{
 				vertex_max = GetCurrYMaximaVertex(horz);
-				if (vertex_max) 
+				if (vertex_max)
 					max_pair = GetHorzMaximaPair(horz, vertex_max);
 			}
 
@@ -2447,7 +2447,7 @@ namespace Clipper2Lib {
 
 				//if horzEdge is a maxima, keep going until we reach
 				//its maxima pair, otherwise check for break conditions
-				if (vertex_max != horz.vertex_top || IsOpenEnd(horz)) 
+				if (vertex_max != horz.vertex_top || IsOpenEnd(horz))
 				{
 					//otherwise stop when 'ae' is beyond the end of the horizontal line
 					if ((is_left_to_right && e->curr_x > horz_right) ||
@@ -2526,15 +2526,15 @@ namespace Clipper2Lib {
 				{
 					AddOutPt(horz, horz.top);
 					if (IsFront(horz))
-						horz.outrec->front_edge = nullptr; 
+						horz.outrec->front_edge = nullptr;
 					else
 						horz.outrec->back_edge = nullptr;
 					horz.outrec = nullptr;
 				}
-				DeleteFromAEL(horz); 
+				DeleteFromAEL(horz);
 				return;
 			}
-			else if (NextVertex(horz)->pt.y != horz.top.y) 
+			else if (NextVertex(horz)->pt.y != horz.top.y)
 				break;
 
 			//still more horizontals in bound to process ...
@@ -2545,7 +2545,7 @@ namespace Clipper2Lib {
 			if (PreserveCollinear && !horzIsOpen && HorzIsSpike(horz))
 				TrimHorz(horz, true);
 
-			is_left_to_right = 
+			is_left_to_right =
 				ResetHorzDirection(horz, max_pair, horz_left, horz_right);
 		}
 
@@ -2558,7 +2558,7 @@ namespace Clipper2Lib {
 		else
 			op = nullptr;
 
-		if ((horzIsOpen && !IsOpenEnd(horz)) || 
+		if ((horzIsOpen && !IsOpenEnd(horz)) ||
 			(!horzIsOpen && vertex_max != horz.vertex_top))
 		{
 			UpdateEdgeIntoAEL(&horz); // this is the end of an intermediate horiz.
@@ -2575,7 +2575,7 @@ namespace Clipper2Lib {
 				AddJoin(op2, op);
 			}
 		}
-		else if (IsHotEdge(horz)) 
+		else if (IsHotEdge(horz))
 			AddLocalMaxPoly(horz, *max_pair, horz.top);
 		else
 		{
@@ -3025,7 +3025,7 @@ namespace Clipper2Lib {
 				OutRec* outrec = ProcessJoin(j);
 				CleanCollinear(outrec);
 			}
-			else 
+			else
 				delete j;
 		}
 
@@ -3074,7 +3074,7 @@ namespace Clipper2Lib {
 	bool CollinearSegsOverlap(const Point64& seg1a, const Point64& seg1b,
 		const Point64& seg2a, const Point64& seg2b)
 	{
-		//precondition: seg1 and seg2 are collinear      
+		//precondition: seg1 and seg2 are collinear
 		if (seg1a.x == seg1b.x)
 		{
 			if (seg2a.x != seg1a.x || seg2a.x != seg2b.x) return false;
@@ -3205,7 +3205,7 @@ namespace Clipper2Lib {
 					{
 						or1->pts = op1;
 						or2->pts = nullptr;
-						if (or1->owner && (!or2->owner || 
+						if (or1->owner && (!or2->owner ||
 							or2->owner->idx < or1->owner->idx))
 								or1->owner = or2->owner;
 						or2->owner = or1;
@@ -3215,7 +3215,7 @@ namespace Clipper2Lib {
 						result = or2;
 						or2->pts = op1;
 						or1->pts = nullptr;
-						if (or2->owner && (!or1->owner || 
+						if (or2->owner && (!or1->owner ||
 							or1->owner->idx < or2->owner->idx))
 								or2->owner = or1->owner;
 						or1->owner = or2;
@@ -3266,7 +3266,7 @@ namespace Clipper2Lib {
 					{
 						or1->pts = op1;
 						or2->pts = nullptr;
-						if (or1->owner && (!or2->owner || 
+						if (or1->owner && (!or2->owner ||
 							or2->owner->idx < or1->owner->idx))
 								or1->owner = or2->owner;
 						or2->owner = or1;
@@ -3276,9 +3276,9 @@ namespace Clipper2Lib {
 						result = or2;
 						or2->pts = op1;
 						or1->pts = nullptr;
-						if (or2->owner && (!or1->owner || 
+						if (or2->owner && (!or1->owner ||
 							or1->owner->idx < or2->owner->idx))
-								or2->owner = or1->owner; 
+								or2->owner = or1->owner;
 						or1->owner = or2;
 					}
 				}
@@ -3369,11 +3369,11 @@ namespace Clipper2Lib {
 			if (pt.y > result.bottom) result.bottom = pt.y;
 		}
 		return result;
-	}	
+	}
 
 	bool BuildPath64(OutPt* op, bool reverse, bool isOpen, Path64& path)
 	{
-		if (op->next == op || (!isOpen && op->next == op->prev)) 
+		if (op->next == op || (!isOpen && op->next == op->prev))
 			return false;
 
 		path.resize(0);
@@ -3414,9 +3414,9 @@ namespace Clipper2Lib {
 		if (owner->bounds.IsEmpty()) owner->bounds = GetBounds(owner->path);
 		bool is_inside_owner_bounds = owner->bounds.Contains(outrec->bounds);
 
-		// while looking for the correct owner, check the owner's 
-		// splits **before** checking the owner itself because 
-		// splits can occur internally, and checking the owner 
+		// while looking for the correct owner, check the owner's
+		// splits **before** checking the owner itself because
+		// splits can occur internally, and checking the owner
 		// first would miss the inner split's true ownership
 		if (owner->splits)
 		{
@@ -3447,7 +3447,7 @@ namespace Clipper2Lib {
 		{
 			if (is_inside_owner_bounds && Path1InsidePath2(outrec, outrec->owner))
 				return true;
-			// otherwise keep trying with owner's owner 
+			// otherwise keep trying with owner's owner
 			outrec->owner = outrec->owner->owner;
 			if (!outrec->owner) return true; // true or false
 			is_inside_owner_bounds = outrec->owner->bounds.Contains(outrec->bounds);
@@ -3490,14 +3490,18 @@ namespace Clipper2Lib {
 		if (has_open_paths_)
 			open_paths.reserve(outrec_list_.size());
 
+		std::shared_ptr<Path64> path;
 		for (OutRec* outrec : outrec_list_)
 		{
 			if (!outrec || !outrec->pts) continue;
 			if (outrec->is_open)
 			{
-				Path64 path;
-				if (BuildPath64(outrec->pts, ReverseSolution, true, path))
-					open_paths.push_back(path);
+				if (!path)
+				{
+					path = std::make_shared<Path64>();
+				}
+				if (BuildPath64(outrec->pts, ReverseSolution, true, *path))
+					open_paths.push_back(move(path));
 				continue;
 			}
 
@@ -3604,14 +3608,18 @@ namespace Clipper2Lib {
 		if (has_open_paths_)
 			open_paths.reserve(outrec_list_.size());
 
+        std::shared_ptr<PathD> path;
 		for (OutRec* outrec : outrec_list_)
 		{
 			if (!outrec || !outrec->pts) continue;
 			if (outrec->is_open)
 			{
-				PathD path;
-				if (BuildPathD(outrec->pts, ReverseSolution, true, path, invScale_))
-					open_paths.push_back(path);
+                if (!path)
+                {
+                    path = std::make_shared<PathD>();
+                }
+				if (BuildPathD(outrec->pts, ReverseSolution, true, *path, invScale_))
+					open_paths.push_back(move(path));
 				continue;
 			}
 

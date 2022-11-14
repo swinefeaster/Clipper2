@@ -164,12 +164,12 @@ using PointD = Point<double>;
 template <typename T>
 using Path = std::vector<Point<T>>;
 template <typename T>
-using Paths = std::vector<Path<T>>;
+using Paths = std::vector<std::shared_ptr<Path<T>>>;
 
 using Path64 = Path<int64_t>;
 using PathD = Path<double>;
-using Paths64 = std::vector< Path64>;
-using PathsD = std::vector< PathD>;
+using Paths64 = std::vector<std::shared_ptr<Path64>>;
+using PathsD = std::vector<std::shared_ptr<PathD>>;
 
 template <typename T>
 std::ostream& operator << (std::ostream& outstream, const Path<T>& path)
@@ -193,16 +193,16 @@ std::ostream& operator << (std::ostream& outstream, const Paths<T>& paths)
 }
 
 template <typename T1, typename T2>
-inline Path<T1> ScalePath(const Path<T2>& path, double scale)
+inline std::shared_ptr<Path<T1>> ScalePath(const Path<T2>& path, double scale)
 {
-	Path<T1> result;
+	auto result = make_shared<Path<T1>>();
 	result.reserve(path.size());
 #ifdef USINGZ
 	for (const Point<T2>& pt : path)
-		result.push_back(Point<T1>(pt.x * scale, pt.y * scale, pt.z));
+		result->push_back(Point<T1>(pt.x * scale, pt.y * scale, pt.z));
 #else
 	for (const Point<T2>& pt : path)
-		result.push_back(Point<T1>(pt.x * scale, pt.y * scale));
+		result->push_back(Point<T1>(pt.x * scale, pt.y * scale));
 #endif
 	return result;
 }
