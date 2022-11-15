@@ -15,6 +15,7 @@
 
 namespace Clipper2Lib {
 
+class Clipper64;
 struct LocalMinima;
 
 enum class JoinType { Square, Round, Miter };
@@ -62,6 +63,7 @@ private:
 	Paths64 solution;
 	std::vector<Group> groups_;
 	JoinType join_type_ = JoinType::Square;
+	std::shared_ptr<Clipper64> work_;
 	
 	double miter_limit_ = 0.0;
 	double arc_tolerance_ = 0.0;

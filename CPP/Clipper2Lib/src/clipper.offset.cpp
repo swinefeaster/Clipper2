@@ -445,7 +445,12 @@ void ClipperOffset::DoGroupOffset(Group& group, double delta)
 	if (!merge_groups_)
 	{
 		//clean up self-intersections ...
-		Clipper64 c(recycled_minima_list_);
+    if (!work_)
+    {
+      work_ = std::make_shared<Clipper64>(recycled_minima_list_);
+    }
+    work_->Clear();
+		Clipper64 & c = *work_;
 		c.PreserveCollinear = false;
 		//the solution should retain the orientation of the input
 		c.ReverseSolution = reverse_solution_ != group.is_reversed_;
@@ -488,7 +493,12 @@ Paths64 ClipperOffset::Execute(double delta)
 	if (merge_groups_ && groups_.size() > 0)
 	{
 		//clean up self-intersections ...
-		Clipper64 c(recycled_minima_list_);
+    if (!work_)
+    {
+      work_ = std::make_shared<Clipper64>(recycled_minima_list_);
+    }
+    work_->Clear();
+    Clipper64 & c = *work_;
 		c.PreserveCollinear = false;
 		//the solution should retain the orientation of the input
 		c.ReverseSolution = reverse_solution_ != groups_[0].is_reversed_;
