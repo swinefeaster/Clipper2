@@ -678,19 +678,27 @@ namespace Clipper2Lib {
 			(CrossProduct(e.next_in_ael->top, curr_pt, e.top) == 0);
 	}
 
-	//------------------------------------------------------------------------------
+
+  ClipperBase::ClipperBase(std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list)
+  {
+    if (recycled_minima_list)
+		{
+			recycled_minima_list_ = recycled_minima_list;
+		}
+		else
+		{
+			recycled_minima_list_ = std::make_shared<RecycledVector<LocalMinima>>();
+		}
+  }
+
+
+  //------------------------------------------------------------------------------
 	// ClipperBase methods ...
 	//------------------------------------------------------------------------------
 
 	ClipperBase::~ClipperBase()
 	{
 		Clear();
-
-		// Free if for real
-    for (auto lm : recycled_minima_list_)
-		{
-			delete lm;
-		}
 	}
 
 	void ClipperBase::DeleteEdges(Active*& e) 
@@ -914,7 +922,7 @@ namespace Clipper2Lib {
 	{
 		for (auto lm : minima_list_)
 		{
-			recycled_minima_list_.push_back(lm);
+			recycled_minima_list_->Recycle(lm);
 		}
 		minima_list_.clear();
 
@@ -929,17 +937,10 @@ namespace Clipper2Lib {
 		if ((VertexFlags::LocalMin & vert.flags) != VertexFlags::None) return;
 
 		vert.flags = (vert.flags | VertexFlags::LocalMin);
-		if (recycled_minima_list_.empty())
-		{
-      minima_list_.push_back(new LocalMinima(&vert, polytype, is_open));
-		}
-		else
-		{
-			auto lm = recycled_minima_list_.back();
-			recycled_minima_list_.pop_back();
-			*lm = LocalMinima(&vert, polytype, is_open);
-			minima_list_.push_back(lm);
-		}
+
+		auto lm = recycled_minima_list_->GrabNew();
+    *lm = LocalMinima(&vert, polytype, is_open);
+    minima_list_.push_back(lm);
 	}
 
 	bool ClipperBase::IsContributingClosed(const Active & e) const
@@ -3553,7 +3554,14 @@ namespace Clipper2Lib {
 		}
 	}
 
-	bool BuildPathD(OutPt* op, bool reverse, bool isOpen, PathD& path, double inv_scale)
+
+  Clipper64::Clipper64(std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list)
+		: ClipperBase(recycled_minima_list)
+	{
+  }
+
+
+  bool BuildPathD(OutPt * op, bool reverse, bool isOpen, PathD & path, double inv_scale)
 	{
 		if (op->next == op || (!isOpen && op->next == op->prev)) return false;
 		path.resize(0);

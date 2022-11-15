@@ -18,6 +18,7 @@ constexpr auto CLIPPER2_VERSION = "1.0.6";
 #include <vector>
 #include <functional>
 #include "clipper.core.h"
+#include "recycled.vector.h"
 
 namespace Clipper2Lib {
 
@@ -167,7 +168,7 @@ namespace Clipper2Lib {
 		Joiner *horz_joiners_ = nullptr;
 		std::vector<LocalMinima*> minima_list_;		//pointers in case of memory reallocs
 		std::vector<LocalMinima*>::iterator current_locmin_iter_;
-    std::vector<LocalMinima *> recycled_minima_list_;
+    std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list_;
 		std::vector<Vertex*> vertex_lists_;
 		std::priority_queue<int64_t> scanline_list_;
 		std::vector<IntersectNode> intersect_nodes_; 
@@ -238,6 +239,7 @@ namespace Clipper2Lib {
 		void AddPath(const Path64& path, PathType polytype, bool is_open);
 		void AddPaths(const Paths64& paths, PathType polytype, bool is_open);
 	public:
+		ClipperBase(std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list = nullptr);
 		virtual ~ClipperBase();
 		bool PreserveCollinear = true;
 		bool ReverseSolution = false;
@@ -415,6 +417,8 @@ namespace Clipper2Lib {
 		void BuildPaths64(Paths64& solutionClosed, Paths64* solutionOpen);
 		void BuildTree64(PolyPath64& polytree, Paths64& open_paths);
 	public:
+    Clipper64(std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list = nullptr);
+
 #ifdef USINGZ
 		void SetZCallback(ZCallback64 cb) { zCallback_ = cb; }
 #endif

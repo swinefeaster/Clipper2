@@ -11,8 +11,11 @@
 #define CLIPPER_OFFSET_H_
 
 #include "clipper.core.h"
+#include "recycled.vector.h"
 
 namespace Clipper2Lib {
+
+struct LocalMinima;
 
 enum class JoinType { Square, Round, Miter };
 
@@ -66,6 +69,8 @@ private:
 	bool preserve_collinear_ = false;
 	bool reverse_solution_ = false;
 
+	std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list_;
+
 	void DoSquare(Group& group, const Path64& path, size_t j, size_t k);
 	void DoMiter(Group& group, const Path64& path, size_t j, size_t k, double cos_a);
 	void DoRound(Group& group, const Path64& path, size_t j, size_t k, double angle);
@@ -79,10 +84,7 @@ public:
 	ClipperOffset(double miter_limit = 2.0,
 		double arc_tolerance = 0.0,
 		bool preserve_collinear = false, 
-		bool reverse_solution = false) :
-		miter_limit_(miter_limit), arc_tolerance_(arc_tolerance),
-		preserve_collinear_(preserve_collinear),
-		reverse_solution_(reverse_solution) { };
+		bool reverse_solution = false);;
 
 	~ClipperOffset() { Clear(); };
 
