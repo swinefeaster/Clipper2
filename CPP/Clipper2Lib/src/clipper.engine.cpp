@@ -685,6 +685,12 @@ namespace Clipper2Lib {
 	ClipperBase::~ClipperBase()
 	{
 		Clear();
+
+		// Free if for real
+    for (auto lm : recycled_minima_list_)
+		{
+			delete lm;
+		}
 	}
 
 	void ClipperBase::DeleteEdges(Active*& e) 
@@ -906,8 +912,12 @@ namespace Clipper2Lib {
 
 	void ClipperBase::DisposeVerticesAndLocalMinima()
 	{
-		for (auto lm : minima_list_) delete lm;
+		for (auto lm : minima_list_)
+		{
+			recycled_minima_list_.push_back(lm);
+		}
 		minima_list_.clear();
+
 		for (auto v : vertex_lists_) delete[] v;
 		vertex_lists_.clear();
 	}
@@ -919,7 +929,17 @@ namespace Clipper2Lib {
 		if ((VertexFlags::LocalMin & vert.flags) != VertexFlags::None) return;
 
 		vert.flags = (vert.flags | VertexFlags::LocalMin);
-		minima_list_.push_back(new LocalMinima(&vert, polytype, is_open));
+		if (recycled_minima_list_.empty())
+		{
+      minima_list_.push_back(new LocalMinima(&vert, polytype, is_open));
+		}
+		else
+		{
+			auto lm = recycled_minima_list_.back();
+			recycled_minima_list_.pop_back();
+			*lm = LocalMinima(&vert, polytype, is_open);
+			minima_list_.push_back(lm);
+		}
 	}
 
 	bool ClipperBase::IsContributingClosed(const Active & e) const

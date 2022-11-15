@@ -125,9 +125,10 @@ namespace Clipper2Lib {
 	};
 
 	struct LocalMinima {
-		Vertex* vertex;
-		PathType polytype;
-		bool is_open;
+    Vertex * vertex = nullptr;
+    PathType polytype = PathType::Clip;
+    bool is_open = false;
+    LocalMinima() = default;
 		LocalMinima(Vertex* v, PathType pt, bool open) :
 			vertex(v), polytype(pt), is_open(open){}
 	};
@@ -166,6 +167,7 @@ namespace Clipper2Lib {
 		Joiner *horz_joiners_ = nullptr;
 		std::vector<LocalMinima*> minima_list_;		//pointers in case of memory reallocs
 		std::vector<LocalMinima*>::iterator current_locmin_iter_;
+    std::vector<LocalMinima *> recycled_minima_list_;
 		std::vector<Vertex*> vertex_lists_;
 		std::priority_queue<int64_t> scanline_list_;
 		std::vector<IntersectNode> intersect_nodes_; 
