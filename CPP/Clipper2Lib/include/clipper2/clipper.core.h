@@ -176,14 +176,14 @@ public:
 	}
 
   PoolVector(size_t count)
+    : PoolVector()
   {
-    _vector = s_allocate();
 		resize(count);
   }
 
   PoolVector( std::initializer_list<T> init)
+    : PoolVector()
   {
-    _vector = s_allocate();
 		for (const auto & item : init)
 		{
 			push_back(item);
@@ -191,11 +191,12 @@ public:
   }
 
 	PoolVector(const PoolVector & other)
+		: PoolVector()
 	{
 		*this = other;
 	}
 
-  PoolVector(PoolVector && other)
+  PoolVector(PoolVector && other) noexcept
   {
 		_vector = other._vector;
   }
