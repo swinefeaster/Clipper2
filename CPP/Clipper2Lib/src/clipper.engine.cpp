@@ -714,7 +714,13 @@ namespace Clipper2Lib {
 	void ClipperBase::CleanUp()
 	{
 		DeleteEdges(actives_);
-		scanline_list_ = std::priority_queue<int64_t>();
+		
+		// Preserve capacity.
+		while (!scanline_list_.empty())
+		{
+			scanline_list_.pop();
+		}
+
 		intersect_nodes_.clear();
 		DisposeAllOutRecs();
 	}
