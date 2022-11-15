@@ -416,6 +416,9 @@ namespace Clipper2Lib {
 	private:
 		void BuildPaths64(Paths64& solutionClosed, Paths64* solutionOpen);
 		void BuildTree64(PolyPath64& polytree, Paths64& open_paths);
+
+		Paths64 dummy_;
+
 	public:
     Clipper64(std::shared_ptr<RecycledVector<LocalMinima>> recycled_minima_list = nullptr);
 
@@ -439,8 +442,8 @@ namespace Clipper2Lib {
 		bool Execute(ClipType clip_type,
 			FillRule fill_rule, Paths64& closed_paths)
 		{
-			Paths64 dummy;
-			return Execute(clip_type, fill_rule, closed_paths, dummy);
+			dummy_.clear();
+			return Execute(clip_type, fill_rule, closed_paths, dummy_);
 		}
 
 		bool Execute(ClipType clip_type, FillRule fill_rule, 
@@ -456,8 +459,8 @@ namespace Clipper2Lib {
 
 		bool Execute(ClipType clip_type, FillRule fill_rule, PolyTree64& polytree)
 		{
-			Paths64 dummy;
-			return Execute(clip_type, fill_rule, polytree, dummy);
+			dummy_.clear();
+			return Execute(clip_type, fill_rule, polytree, dummy_);
 		}
 
 		bool Execute(ClipType clip_type,
