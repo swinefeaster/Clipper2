@@ -27,15 +27,18 @@ class ClipperOffset {
 private:
 
 	class Group {
+	private:
+		Paths64 pathContainer_; // We just use the first index here for path_.
 	public:
 		Paths64 paths_in_;
 		Paths64 paths_out_;
-		Path64 path_;
+		Path64 & path_;
 		bool is_reversed_ = false;
 		JoinType join_type_;
 		EndType end_type_;
 		Group(const Paths64& paths, JoinType join_type, EndType end_type) :
-			paths_in_(paths), join_type_(join_type), end_type_(end_type) {}
+			pathContainer_(1), paths_in_(paths), path_(pathContainer_[0]), 
+			join_type_(join_type), end_type_(end_type) {}
 	};
 
 	double group_delta_ = 0.0;
