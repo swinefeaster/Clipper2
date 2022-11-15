@@ -452,7 +452,7 @@ void ClipperOffset::DoGroupOffset(Group& group, double delta)
     work_->Clear();
 		Clipper64 & c = *work_;
 		c.PreserveCollinear = false;
-		//the solution should retain the orientation of the input
+		//the solution_ should retain the orientation of the input
 		c.ReverseSolution = reverse_solution_ != group.is_reversed_;
 		c.AddSubject(group.paths_out_);
 		if (group.is_reversed_)
@@ -461,55 +461,65 @@ void ClipperOffset::DoGroupOffset(Group& group, double delta)
 			c.Execute(ClipType::Union, FillRule::Positive, group.paths_out_);
 	}
 
-	solution.reserve(solution.size() + group.paths_out_.size());
-	copy(group.paths_out_.begin(), group.paths_out_.end(), back_inserter(solution));
+	solution_->reserve(solution_->size() + group.paths_out_.size());
+	copy(group.paths_out_.begin(), group.paths_out_.end(), back_inserter(*solution_));
 	group.paths_out_.clear();
 }
 
 Paths64 ClipperOffset::Execute(double delta)
 {
-	solution.clear();
+	Paths64 result;
+	Execute(delta, result);
+	return result;
+}
+
+
+void ClipperOffset::Execute(double delta, Paths64 & result)
+{
+	solution_ = &result;
+	solution_->clear();
 	if (std::abs(delta) < default_arc_tolerance)
 	{
 		for (const Group& group : groups_)
 		{
-			solution.reserve(solution.size() + group.paths_in_.size());
-			copy(group.paths_in_.begin(), group.paths_in_.end(), back_inserter(solution));
+			solution_->reserve(solution_->size() + group.paths_in_.size());
+			copy(group.paths_in_.begin(), group.paths_in_.end(), back_inserter(*solution_));
 		}
-		return solution;
 	}
+	else
+  {
+    temp_lim_ = (miter_limit_ <= 1) ?
+      2.0 :
+      2.0 / (miter_limit_ * miter_limit_);
 
-	temp_lim_ = (miter_limit_ <= 1) ? 
-		2.0 : 
-		2.0 / (miter_limit_ * miter_limit_);
-
-	std::vector<Group>::iterator groups_iter;
-	for (groups_iter = groups_.begin(); 
-		groups_iter != groups_.end(); ++groups_iter)
-	{
-		DoGroupOffset(*groups_iter, delta);
-	}
-
-	if (merge_groups_ && groups_.size() > 0)
-	{
-		//clean up self-intersections ...
-    if (!work_)
+    std::vector<Group>::iterator groups_iter;
+    for (groups_iter = groups_.begin();
+      groups_iter != groups_.end(); ++groups_iter)
     {
-      work_ = std::make_shared<Clipper64>(recycled_minima_list_);
+      DoGroupOffset(*groups_iter, delta);
     }
-    work_->Clear();
-    Clipper64 & c = *work_;
-		c.PreserveCollinear = false;
-		//the solution should retain the orientation of the input
-		c.ReverseSolution = reverse_solution_ != groups_[0].is_reversed_;
 
-		c.AddSubject(solution);
-		if (groups_[0].is_reversed_)
-			c.Execute(ClipType::Union, FillRule::Negative, solution);
-		else
-			c.Execute(ClipType::Union, FillRule::Positive, solution);
-	}
-	return solution;
+    if (merge_groups_ && groups_.size() > 0)
+    {
+      //clean up self-intersections ...
+      if (!work_)
+      {
+        work_ = std::make_shared<Clipper64>(recycled_minima_list_);
+      }
+      work_->Clear();
+      Clipper64 & c = *work_;
+      c.PreserveCollinear = false;
+      //the solution_ should retain the orientation of the input
+      c.ReverseSolution = reverse_solution_ != groups_[0].is_reversed_;
+
+      c.AddSubject(*solution_);
+      if (groups_[0].is_reversed_)
+        c.Execute(ClipType::Union, FillRule::Negative, *solution_);
+      else
+        c.Execute(ClipType::Union, FillRule::Positive, *solution_);
+    }
+  }
+	solution_ = nullptr;
 }
 
 } // namespace

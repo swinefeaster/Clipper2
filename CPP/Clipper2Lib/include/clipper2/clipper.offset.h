@@ -60,7 +60,7 @@ private:
 	double temp_lim_ = 0.0;
 	double steps_per_rad_ = 0.0;
 	PathD norms;
-	Paths64 solution;
+	Paths64 * solution_ = nullptr;
 	std::vector<Group> groups_;
 	JoinType join_type_ = JoinType::Square;
 	std::shared_ptr<Clipper64> work_;
@@ -98,6 +98,7 @@ public:
 	void Clear() { groups_.clear(); norms.clear(); };
 	
 	Paths64 Execute(double delta);
+  void Execute(double delta, Paths64 & result);
 
 	double MiterLimit() const { return miter_limit_; }
 	void MiterLimit(double miter_limit) { miter_limit_ = miter_limit; }
