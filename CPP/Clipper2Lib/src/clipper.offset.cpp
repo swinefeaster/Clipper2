@@ -99,11 +99,20 @@ void ClipperOffset::AddPath(const Path64& path, JoinType jt_, EndType et_)
 	AddPaths(paths, jt_, et_);
 }
 
-void ClipperOffset::AddPaths(const Paths64 &paths, JoinType jt_, EndType et_)
+void ClipperOffset::AddPaths(const Paths64 & paths, JoinType jt_, EndType et_)
 {
 	if (paths.size() == 0) return;
-	groups_.push_back(Group(paths, jt_, et_));
+	groups_.push_back({});
+	groups_.back().Init(paths, jt_, et_);
 }
+
+
+void ClipperOffset::SetPaths(const Paths64 & paths, JoinType jt_, EndType et_)
+{
+	groups_.resize(1);
+	groups_[0].Init(paths, jt_, et_);
+}
+
 
 void ClipperOffset::AddPath(const Clipper2Lib::PathD& path, JoinType jt_, EndType et_)
 {
@@ -115,7 +124,8 @@ void ClipperOffset::AddPath(const Clipper2Lib::PathD& path, JoinType jt_, EndTyp
 void ClipperOffset::AddPaths(const PathsD& paths, JoinType jt_, EndType et_)
 {
 	if (paths.size() == 0) return;
-	groups_.push_back(Group(PathsDToPaths64(paths), jt_, et_));
+    groups_.push_back({});
+    groups_.back().Init(PathsDToPaths64(paths), jt_, et_);
 }
 
 void ClipperOffset::BuildNormals(const Path64& path)

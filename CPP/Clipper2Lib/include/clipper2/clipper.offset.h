@@ -34,11 +34,21 @@ private:
 		Paths64 paths_out_;
 		Path64 & path_;
 		bool is_reversed_ = false;
-		JoinType join_type_;
-		EndType end_type_;
-		Group(const Paths64& paths, JoinType join_type, EndType end_type) :
-			pathContainer_(1), paths_in_(paths), path_(pathContainer_[0]), 
-			join_type_(join_type), end_type_(end_type) {}
+		JoinType join_type_ = JoinType::Square;
+		EndType end_type_ = EndType::Square;
+		
+		Group()
+			: pathContainer_(1), path_(pathContainer_[0])
+		{}
+		
+		void Init(const Paths64 & paths, JoinType join_type, EndType end_type)
+		{
+			paths_in_ = paths;
+			paths_out_.clear();
+			path_.clear();
+			join_type_ = join_type;
+			end_type_ = end_type;
+		}
 	};
 
 	double group_delta_ = 0.0;
@@ -80,6 +90,7 @@ public:
 	void AddPaths(const Paths64& paths, JoinType jt_, EndType et_);
 	void AddPath(const PathD &p, JoinType jt_, EndType et_);
 	void AddPaths(const PathsD &p, JoinType jt_, EndType et_);
+	void SetPaths(const Paths64& paths, JoinType jt_, EndType et_);
 	void Clear() { groups_.clear(); norms.clear(); };
 	
 	Paths64 Execute(double delta);
